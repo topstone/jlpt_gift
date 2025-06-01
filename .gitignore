@@ -3,6 +3,7 @@
 /.config
 /.rspec_status
 /coverage/
+/Gemfile.lock
 /InstalledFiles
 /pkg/
 /spec/reports/
