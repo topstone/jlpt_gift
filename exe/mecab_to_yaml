@@ -1,0 +1,40 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require 'jlpt_gift'
+
+# 標準入力からMeCab出力を読み取り、YAML形式で標準出力に出力するスクリプト
+#
+# 使用方法:
+#   echo "私は学生です" | mecab | ruby mecab_to_yaml.rb
+#   mecab < input.txt | ruby mecab_to_yaml.rb
+#
+# 出力形式:
+#   各行のMeCab出力が個別のYAMLドキュメントとして出力されます
+
+begin
+  # 標準入力を1行ずつ処理
+  STDIN.each_line do |line|
+    line = line.chomp
+    
+    # 空行やEOS（End of Sentence）マーカーをスキップ
+    next if line.empty? || line == "EOS"
+    
+    # MeCabインスタンスを作成して解析
+    mecab = JlptGift::Mecab.new
+    mecab.parse(line)
+    
+    # YAML形式で出力（区切り線付き）
+    puts "---"
+    mecab.put_yaml
+  end
+  
+rescue Interrupt
+  # Ctrl+C で中断された場合の処理
+  STDERR.puts "\n処理が中断されました"
+  exit 1
+rescue => e
+  # その他のエラー処理
+  STDERR.puts "エラーが発生しました: #{e.message}"
+  exit 1
+end
