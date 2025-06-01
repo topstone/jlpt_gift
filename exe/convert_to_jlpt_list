@@ -10,80 +10,70 @@ input_lines = STDIN.read.split("\n").reject(&:empty?)
 data_rows = []
 header_indices = {}
 
-# 最初の行をチェックして見出し行かどうか判定
-first_line = input_lines.first
-is_header = first_line&.start_with?("語\t")
+# 1行目は必ず見出し行
+header_fields = input_lines.first.split("\t")
 
-if is_header
-  # 見出し行がある場合
-  header_fields = first_line.split("\t")
+# 各フィールドのインデックスを記録
+header_fields.each_with_index do |field, index|
+  if field == "語"
+    header_indices[:reading] = index
+  elsif field.include?("級")
+    header_indices[:level] = index
+  elsif field.include?("原")
+    header_indices[:original] = index
+  end
+end
+
+# データ行を処理（見出し行をスキップ）
+input_lines[1..-1].each do |line|
+  fields = line.split("\t")
   
-  # 各フィールドのインデックスを記録
-  header_fields.each_with_index do |field, index|
-    if field == "語"
-      header_indices[:reading] = index
-    elsif field.include?("級")
-      header_indices[:level] = index
-    elsif field.include?("原")
-      header_indices[:original] = index
-    end
+  reading = header_indices[:reading] ? fields[header_indices[:reading]] : ""
+  level = header_indices[:level] ? fields[header_indices[:level]] : ""
+  original = header_indices[:original] ? fields[header_indices[:original]] : ""
+  
+  # 原語フィールドの末尾が「（する）」の場合削除
+  original = original.gsub(/（する） *$/, "") if original
+  readings = readings.gsub(/（する） *$/, "") if readings
+  
+  # 読みと原語の分割処理（「//」「・」「、」）
+  readings = [reading]
+  if reading.include?("//")
+    readings = reading.split("//")
+  elsif reading.include?("・")
+    readings = reading.split("・")
+  elsif reading.include?("、")
+    readings = reading.split("、")
   end
   
-  # データ行を処理（見出し行をスキップ）
-  input_lines[1..-1].each do |line|
-    fields = line.split("\t")
-    
-    reading = header_indices[:reading] ? fields[header_indices[:reading]] : ""
-    level = header_indices[:level] ? fields[header_indices[:level]] : ""
-    original = header_indices[:original] ? fields[header_indices[:original]] : ""
-    
-    # 原語フィールドの末尾が「（する）」の場合削除
-    original = original.gsub(/（する）$/, "") if original
-    
-    # 読みと原語の「//」分割処理
-    readings = reading.include?("//") ? reading.split("//") : [reading]
-    originals = original.include?("//") ? original.split("//") : [original]
-    
-    # 各組み合わせをデータ行に追加
-    readings.each do |r|
-      originals.each do |o|
-        # 原語が英字のみの場合は採用しない
-        if o.match?(/^[a-zA-Z]+$/)
-          data_rows << {
-            reading: r.strip,
-            level: level,
-            original: ""
-          }
-        else
-          data_rows << {
-            reading: r.strip,
-            level: level,
-            original: o.strip
-          }
-        end
+  originals = [original]
+  if original.include?("//")
+    originals = original.split("//")
+  elsif original.include?("・")
+    originals = original.split("・")
+  elsif original.include?("、")
+    originals = original.split("、")
+  end
+  
+  # 各組み合わせをデータ行に追加
+  readings.each do |r|
+    originals.each do |o|
+      # 原語が英字のみの場合は採用しない
+      if o.match?(/^[a-zA-Z]+$/)
+        data_rows << {
+          reading: r.strip,
+          level: level,
+          original: ""
+        }
+      else
+        data_rows << {
+          reading: r.strip,
+          level: level,
+          original: o.strip
+        }
       end
     end
   end
-else
-  # 見出し行がない場合：左から「読み」「級」
-  input_lines.each do |line|
-    fields = line.split("\t")
-    
-    reading = fields[0] || ""
-    level = fields[1] || ""
-    original = ""
-    
-    # 読みの「//」分割処理
-    readings = reading.include?("//") ? reading.split("//") : [reading]
-    
-    # 各読みをデータ行に追加
-    readings.each do |r|
-      data_rows << {
-        reading: r.strip,
-        level: level,
-        original: original
-      }
-    end
 end
 
 # 読みでグループ化
