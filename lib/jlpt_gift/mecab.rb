@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "yaml"
+require "csv"
 
 module JlptGift
   # MeCabの出力を解析して構造化データとして扱うためのクラス
@@ -18,6 +19,9 @@ module JlptGift
   # @author JLPT Gift Development Team
   # @since 1.0.0
   class Mecab
+    # CSVファイルから読み込んだJLPT単語リスト
+    @@word_list = nil
+
     # @!attribute [rw] surface
     #   @return [String, nil] 表層形（入力テキストに現れる実際の単語形）
     # @!attribute [rw] part_of_speech
@@ -44,6 +48,51 @@ module JlptGift
                   :part_of_speech_detail2, :part_of_speech_detail3,
                   :inflection_type, :inflection_form, :base_form,
                   :reading, :pronunciation, :jlpt_level
+
+    # JLPT単語リストをCSVファイルから読み込む
+    #
+    # カレントディレクトリの「jlpt_word_list.csv」を読み込み、
+    # 単語とJLPTレベル（数値）の対応表を作成します。
+    # 単語部分が空の行は無視されます。
+    #
+    # @return [Hash<String, String>] 単語をキー、JLPTレベルを値とするハッシュ
+    #
+    # @example CSVファイルの形式
+    #   合図,2
+    #   走る,4
+    #   ハシル,4
+    #   食べる,5
+    #
+    # @note ファイルが存在しない場合は空のハッシュを返す
+    # @note 一度読み込んだデータはクラス変数にキャッシュされる
+    def self.load_list
+      return @@word_list if @@word_list
+
+      @@word_list = {}
+      csv_file = "jlpt_word_list.csv"
+
+      return @@word_list unless File.exist?(csv_file)
+
+      begin
+        CSV.foreach(csv_file) do |row|
+          next if row.nil? || row.length < 2
+          
+          word = row[0]&.strip
+          level = row[1]&.strip
+
+          # 単語が空でない場合のみ追加
+          next if word.nil? || word.empty?
+
+          @@word_list[word] = level
+        end
+      rescue StandardError => e
+        # エラーが発生した場合は空のハッシュを返す
+        warn "Warning: Failed to load JLPT word list: #{e.message}"
+        @@word_list = {}
+      end
+
+      @@word_list
+    end
 
     # Mecabインスタンスを初期化する
     #
@@ -103,6 +152,9 @@ module JlptGift
       @base_form = features[6] if features.length > 6
       @reading = features[7] if features.length > 7
       @pronunciation = features[8] if features.length > 8
+
+      # JLPTレベルの設定
+      set_jlpt_level
     end
 
     # MeCab出力形式の文字列として返す
@@ -146,7 +198,8 @@ module JlptGift
         inflection_form: @inflection_form,
         base_form: @base_form,
         reading: @reading,
-        pronunciation: @pronunciation
+        pronunciation: @pronunciation,
+        jlpt_level: @jlpt_level
       }
     end
 
@@ -170,11 +223,36 @@ module JlptGift
     #   # base_form: 走る
     #   # reading: ハシッ
     #   # pronunciation: ハシッ
+    #   # jlpt_level: 4
     def put_yaml
       puts to_hash.to_yaml
     end
 
     private
+
+    # JLPTレベルを設定する
+    #
+    # base_formまたはreadingがJLPT単語リストに存在する場合、
+    # 対応するjlpt_levelを設定します。
+    # base_formを優先し、次にreadingをチェックします。
+    #
+    # @return [void]
+    # @note 単語リストが読み込まれていない場合は自動的に読み込みを試行する
+    def set_jlpt_level
+      word_list = self.class.load_list
+      return if word_list.empty?
+
+      # base_formで検索（優先）
+      if @base_form && word_list.key?(@base_form)
+        @jlpt_level = word_list[@base_form].to_i
+        return
+      end
+
+      # readingで検索
+      if @reading && word_list.key?(@reading)
+        @jlpt_level = word_list[@reading].to_i
+      end
+    end
 
     # アスタリスク文字をnilに変換する
     #

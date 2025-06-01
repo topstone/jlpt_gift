@@ -5,6 +5,7 @@
 /coverage/
 /Gemfile.lock
 /InstalledFiles
+/jlpt_word_list.csv
 /pkg/
 /spec/reports/
 /spec/examples.txt
