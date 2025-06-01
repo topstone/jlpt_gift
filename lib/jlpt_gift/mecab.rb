@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "yaml"
+
 module JlptGift
   # MeCabの出力を解析して構造化データとして扱うためのクラス
   #
@@ -143,6 +145,30 @@ module JlptGift
         reading: @reading,
         pronunciation: @pronunciation
       }
+    end
+
+    # 属性をYAML形式で標準出力に出力する
+    #
+    # インスタンスの全属性をYAML形式で標準出力に出力します。
+    # デバッグやログ出力に便利です。
+    #
+    # @return [void]
+    #
+    # @example
+    #   mecab.put_yaml
+    #   # => ---
+    #   # surface: 走っ
+    #   # part_of_speech: 動詞
+    #   # part_of_speech_detail1: 自立
+    #   # part_of_speech_detail2:
+    #   # part_of_speech_detail3:
+    #   # inflection_type: 五段・ラ行
+    #   # inflection_form: 連用タ接続
+    #   # base_form: 走る
+    #   # reading: ハシッ
+    #   # pronunciation: ハシッ
+    def put_yaml
+      puts to_hash.to_yaml
     end
 
     private

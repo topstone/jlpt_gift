@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "yaml"
+
 RSpec.describe JlptGift::Mecab do
   describe "#initialize" do
     it "initializes all attributes to nil" do
@@ -142,6 +144,67 @@ RSpec.describe JlptGift::Mecab do
       }
 
       expect(mecab.to_hash).to eq(expected_hash)
+    end
+  end
+
+  describe "#put_yaml" do
+    it "outputs YAML format to stdout" do
+      mecab = described_class.new
+      mecab.parse("走っ\t動詞,自立,*,*,五段・ラ行,連用タ接続,走る,ハシッ,ハシッ")
+
+      expected_hash = {
+        surface: "走っ",
+        part_of_speech: "動詞",
+        part_of_speech_detail1: "自立",
+        part_of_speech_detail2: nil,
+        part_of_speech_detail3: nil,
+        inflection_type: "五段・ラ行",
+        inflection_form: "連用タ接続",
+        base_form: "走る",
+        reading: "ハシッ",
+        pronunciation: "ハシッ"
+      }
+
+      expect { mecab.put_yaml }.to output(expected_hash.to_yaml).to_stdout
+    end
+
+    it "outputs YAML for an instance with nil attributes" do
+      mecab = described_class.new
+
+      expected_hash = {
+        surface: nil,
+        part_of_speech: nil,
+        part_of_speech_detail1: nil,
+        part_of_speech_detail2: nil,
+        part_of_speech_detail3: nil,
+        inflection_type: nil,
+        inflection_form: nil,
+        base_form: nil,
+        reading: nil,
+        pronunciation: nil
+      }
+
+      expect { mecab.put_yaml }.to output(expected_hash.to_yaml).to_stdout
+    end
+
+    it "outputs YAML for partially parsed data" do
+      mecab = described_class.new
+      mecab.parse("走る\t動詞")
+
+      expected_hash = {
+        surface: "走る",
+        part_of_speech: "動詞",
+        part_of_speech_detail1: nil,
+        part_of_speech_detail2: nil,
+        part_of_speech_detail3: nil,
+        inflection_type: nil,
+        inflection_form: nil,
+        base_form: nil,
+        reading: nil,
+        pronunciation: nil
+      }
+
+      expect { mecab.put_yaml }.to output(expected_hash.to_yaml).to_stdout
     end
   end
 
