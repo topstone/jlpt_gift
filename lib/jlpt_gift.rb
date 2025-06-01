@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require_relative "jlpt_gift/mecab"
 require_relative "jlpt_gift/version"
 
 module JlptGift
