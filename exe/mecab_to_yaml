@@ -13,6 +13,9 @@ require 'jlpt_gift'
 #   各行のMeCab出力が個別のYAMLドキュメントとして出力されます
 
 begin
+  # 全ての形態素を格納する配列
+  morphemes = []
+  
   # 標準入力を1行ずつ処理
   STDIN.each_line do |line|
     line = line.chomp
@@ -24,10 +27,13 @@ begin
     mecab = JlptGift::Mecab.new
     mecab.parse(line)
     
-    # YAML形式で出力（区切り線付き）
-    puts "---"
-    mecab.put_yaml
+    # ハッシュ形式で配列に追加
+    morphemes << mecab.to_hash
   end
+  
+  # 配列全体をYAML形式で出力
+  require 'yaml'
+  puts({ "形態素" => morphemes }.to_yaml)
   
 rescue Interrupt
   # Ctrl+C で中断された場合の処理

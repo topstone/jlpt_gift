@@ -38,10 +38,12 @@ module JlptGift
     #   @return [String, nil] 読み（カタカナ表記）
     # @!attribute [rw] pronunciation
     #   @return [String, nil] 発音（実際の発音、音韻変化を反映）
+    # @!attribute [rw] jlpt_level
+    #   @return [String, nil] JLPT での難易度
     attr_accessor :surface, :part_of_speech, :part_of_speech_detail1,
                   :part_of_speech_detail2, :part_of_speech_detail3,
                   :inflection_type, :inflection_form, :base_form,
-                  :reading, :pronunciation
+                  :reading, :pronunciation, :jlpt_level
 
     # Mecabインスタンスを初期化する
     #
@@ -60,6 +62,7 @@ module JlptGift
       @base_form = nil
       @reading = nil
       @pronunciation = nil
+      @jlpt_level = nil
     end
 
     # MeCabの出力行を解析してインスタンスの属性に設定する
