@@ -1,0 +1,102 @@
+#!/usr/bin/env ruby
+# -*- coding: utf-8 -*-
+
+require 'csv'
+
+# TSVファイルから標準入力を読み取り
+input_data = STDIN.read
+
+# CSVライブラリを使ってTSVをパース（タブ区切り）
+rows = CSV.parse(input_data, col_sep: "\t")
+
+# データを構造化
+data_by_level = {}
+all_words = []
+
+rows.each do |row|
+  next if row.length < 4  # 最低4項目必要
+  
+  jlpt_level = row[0]
+  reading = row[1]
+  original = row[2]
+  translations = row[3..-1].compact.join(',')
+  
+  # データを保存
+  word_data = {
+    level: jlpt_level,
+    reading: reading,
+    original: original,
+    translations: translations
+  }
+  
+  data_by_level[jlpt_level] ||= []
+  data_by_level[jlpt_level] << word_data
+  all_words << word_data
+end
+
+# 誤答生成用のoriginal語彙リストを作成
+def generate_wrong_answers(target_word, all_words, count = 9)
+  # 同じレベルの語彙を優先
+  same_level_words = all_words.select { |w| w[:level] == target_word[:level] && w[:original] != target_word[:original] }
+  
+  wrong_answers = []
+  
+  # 同じレベルから取得
+  if same_level_words.length >= count
+    wrong_answers = same_level_words.sample(count).map { |w| w[:original] }
+  else
+    # 同じレベルから全て取得
+    wrong_answers = same_level_words.map { |w| w[:original] }
+    
+    # 不足分を他のレベルから取得
+    other_words = all_words.select { |w| w[:level] != target_word[:level] && w[:original] != target_word[:original] }
+    remaining_count = count - wrong_answers.length
+    wrong_answers += other_words.sample(remaining_count).map { |w| w[:original] }
+  end
+  
+  wrong_answers
+end
+
+# 各レベルを処理
+data_by_level.keys.sort.each do |level|
+  words = data_by_level[level]
+  level_name = "N#{level}"
+  
+  if words.length >= 16
+    # 大問に分割
+    words_per_daimon = (words.length / ((words.length + 9) / 10.0)).ceil
+    words_per_daimon = [words_per_daimon, 15].min
+    words_per_daimon = [words_per_daimon, 8].max
+    
+    daimon_number = 1
+    words.each_slice(words_per_daimon) do |daimon_words|
+      puts "$CATEGORY: $module$/top/#{level_name}/大問#{daimon_number}"
+      puts
+      
+      daimon_words.each_with_index do |word, index|
+        question_number = index + 1
+        wrong_answers = generate_wrong_answers(word, all_words)
+        choices = ([word[:original]] + wrong_answers).join('~')
+        
+        puts "::Q#{question_number}_#{word[:reading]}::[html]#{word[:translations]}{=#{choices}}"
+      end
+      
+      puts
+      daimon_number += 1
+    end
+  else
+    # 大問に分割しない
+    puts "$CATEGORY: $module$/top/#{level_name}"
+    puts
+    
+    words.each_with_index do |word, index|
+      question_number = index + 1
+      wrong_answers = generate_wrong_answers(word, all_words)
+      choices = ([word[:original]] + wrong_answers).join('~')
+      
+      puts "::Q#{question_number}_#{word[:reading]}::[html]#{word[:translations]}{=#{choices}}"
+    end
+    
+    puts
+  end
+end
