@@ -140,7 +140,8 @@ RSpec.describe JlptGift::Mecab do
         inflection_form: "連用タ接続",
         base_form: "走る",
         reading: "ハシッ",
-        pronunciation: "ハシッ"
+        pronunciation: "ハシッ",
+        jlpt_level: 4
       }
 
       expect(mecab.to_hash).to eq(expected_hash)
@@ -162,7 +163,8 @@ RSpec.describe JlptGift::Mecab do
         inflection_form: "連用タ接続",
         base_form: "走る",
         reading: "ハシッ",
-        pronunciation: "ハシッ"
+        pronunciation: "ハシッ",
+        jlpt_level: 4
       }
 
       expect { mecab.put_yaml }.to output(expected_hash.to_yaml).to_stdout
@@ -181,7 +183,8 @@ RSpec.describe JlptGift::Mecab do
         inflection_form: nil,
         base_form: nil,
         reading: nil,
-        pronunciation: nil
+        pronunciation: nil,
+        jlpt_level: nil
       }
 
       expect { mecab.put_yaml }.to output(expected_hash.to_yaml).to_stdout
@@ -201,7 +204,8 @@ RSpec.describe JlptGift::Mecab do
         inflection_form: nil,
         base_form: nil,
         reading: nil,
-        pronunciation: nil
+        pronunciation: nil,
+        jlpt_level: nil
       }
 
       expect { mecab.put_yaml }.to output(expected_hash.to_yaml).to_stdout
