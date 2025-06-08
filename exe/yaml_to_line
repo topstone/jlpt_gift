@@ -26,7 +26,7 @@ begin
         hiragana_reading = katakana_to_hiragana(reading)
         
         # CSV形式で出力
-        puts "#{jlpt_level},#{base_form},#{hiragana_reading}"
+        puts "#{jlpt_level},#{hiragana_reading},#{base_form}"
       end
     end
   end
