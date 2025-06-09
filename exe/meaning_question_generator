@@ -70,7 +70,7 @@ data_by_level.keys.sort.each do |level|
     
     daimon_number = 1
     words.each_slice(words_per_daimon) do |daimon_words|
-      puts "$CATEGORY: $module$/top/#{level_name}/大問#{daimon_number}"
+      puts "$CATEGORY: $module$/top/意味/#{level_name}/大問#{daimon_number}"
       puts
       
       daimon_words.each_with_index do |word, index|
@@ -78,7 +78,8 @@ data_by_level.keys.sort.each do |level|
         wrong_answers = generate_wrong_answers(word, all_words)
         choices = ([word[:original]] + wrong_answers).join('~')
         
-        puts "::Q#{question_number}_#{word[:reading]}::[html]#{word[:translations]}{=#{choices}}"
+        puts "::Q#{question_number}_#{word[:original]}::[html]#{word[:translations]}{=#{choices}}"
+        puts
       end
       
       puts
@@ -86,7 +87,7 @@ data_by_level.keys.sort.each do |level|
     end
   else
     # 大問に分割しない
-    puts "$CATEGORY: $module$/top/#{level_name}"
+    puts "$CATEGORY: $module$/top/意味/#{level_name}"
     puts
     
     words.each_with_index do |word, index|
@@ -94,7 +95,8 @@ data_by_level.keys.sort.each do |level|
       wrong_answers = generate_wrong_answers(word, all_words)
       choices = ([word[:original]] + wrong_answers).join('~')
       
-      puts "::Q#{question_number}_#{word[:reading]}::[html]#{word[:translations]}{=#{choices}}"
+      puts "::Q#{question_number}_#{word[:original]}::[html]#{word[:translations]}{=#{choices}}"
+      puts
     end
     
     puts
